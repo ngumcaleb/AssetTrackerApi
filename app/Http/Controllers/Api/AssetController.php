@@ -69,6 +69,7 @@ class AssetController extends Controller
             'purchase_price' => 'nullable|numeric|min:0',
             'supplier' => 'nullable|string|max:255',
             'location' => 'nullable|string|max:255',
+            'condition' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'photo' => 'nullable|image|max:5120',
         ]);
@@ -96,6 +97,7 @@ class AssetController extends Controller
             'purchase_price' => $request->purchase_price,
             'supplier' => $request->supplier,
             'location' => $request->location,
+            'condition' => $request->condition,
             'description' => $request->description,
             'created_by' => $request->user()->id,
         ]);
@@ -123,7 +125,7 @@ class AssetController extends Controller
             'name' => 'sometimes|string|max:255',
             'serial' => 'sometimes|string|unique:assets,serial,' . $asset->id,
             'category_id' => 'sometimes|exists:categories,id',
-            'status' => 'sometimes|in:active,archived,checked_out',
+            'status' => 'sometimes|in:active,archived,checked_out,discarded',
             'brand' => 'nullable|string|max:255',
             'model' => 'nullable|string|max:255',
             'purchase_date' => 'nullable|date',
@@ -131,6 +133,7 @@ class AssetController extends Controller
             'supplier' => 'nullable|string|max:255',
             'location' => 'nullable|string|max:255',
             'description' => 'nullable|string',
+            'condition' => 'nullable|string|max:255',
             'archived_reason' => 'nullable|string|max:255',
         ]);
 
@@ -154,6 +157,21 @@ class AssetController extends Controller
                 'user_id' => $request->user()->id,
                 'description' => "Asset \"{$asset->name}\" archived",
                 'metadata' => ['reason' => $asset->archived_reason],
+            ]);
+        }
+
+        if ($request->status === 'discarded' && $oldStatus !== 'discarded') {
+            $asset->update([
+                'discarded_at' => now(),
+                'discarded_reason' => $request->discarded_reason ?? 'Discarded by user',
+            ]);
+
+            ActivityLog::create([
+                'type' => 'asset_discarded',
+                'asset_id' => $asset->id,
+                'user_id' => $request->user()->id,
+                'description' => "Asset \"{$asset->name}\" discarded",
+                'metadata' => ['reason' => $asset->discarded_reason],
             ]);
         }
 

@@ -28,6 +28,9 @@ class Asset extends Model
         'description',
         'archived_at',
         'archived_reason',
+        'condition',
+        'discarded_at',
+        'discarded_reason',
         'created_by',
     ];
 
@@ -37,6 +40,7 @@ class Asset extends Model
             'purchase_date' => 'date',
             'purchase_price' => 'decimal:2',
             'archived_at' => 'datetime',
+            'discarded_at' => 'datetime',
         ];
     }
 
@@ -78,5 +82,10 @@ class Asset extends Model
     public function scopeCheckedOut($query)
     {
         return $query->where('status', 'checked_out');
+    }
+
+    public function scopeDiscarded($query)
+    {
+        return $query->where('status', 'discarded');
     }
 }

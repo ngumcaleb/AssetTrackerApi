@@ -20,16 +20,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/summary', [DashboardController::class, 'summary']);
 
-    Route::apiResource('categories', CategoryController::class);
+    Route::name('api.')->group(function () {
+        Route::apiResource('categories', CategoryController::class);
 
-    Route::apiResource('assets', AssetController::class);
-    Route::patch('/assets/{asset}/restore', [AssetController::class, 'restore']);
+        Route::apiResource('assets', AssetController::class);
+        Route::patch('/assets/{asset}/restore', [AssetController::class, 'restore']);
 
-    Route::apiResource('checkouts', CheckOutController::class)->only(['index', 'store', 'show']);
-    Route::post('/checkouts/{checkout}/return', [CheckOutController::class, 'returnAsset']);
+        Route::apiResource('checkouts', CheckOutController::class)->only(['index', 'store', 'show']);
+        Route::post('/checkouts/{checkout}/return', [CheckOutController::class, 'returnAsset']);
 
-    Route::get('/activity', [ActivityLogController::class, 'index']);
-    Route::post('/activity', [ActivityLogController::class, 'store']);
+        Route::get('/activity', [ActivityLogController::class, 'index']);
+        Route::post('/activity', [ActivityLogController::class, 'store']);
+    });
 
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::put('/notifications/read-all', [NotificationController::class, 'markAllRead']);
