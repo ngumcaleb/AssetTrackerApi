@@ -34,6 +34,9 @@ Route::get('/registration-success', function () {
 Route::middleware('auth:web')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    Route::get('/assets-export-pdf', [\App\Http\Controllers\Web\ReportController::class, 'exportAssetsPdf'])->name('reports.assets-pdf');
+    Route::get('/status-export-pdf', [\App\Http\Controllers\Web\ReportController::class, 'exportStatusPdf'])->name('reports.status-pdf');
+
     Route::get('/assets', [AssetController::class, 'index'])->name('assets.index');
     Route::get('/assets/create', [AssetController::class, 'create'])->name('assets.create');
     Route::post('/assets', [AssetController::class, 'store'])->name('assets.store');
