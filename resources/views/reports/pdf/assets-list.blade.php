@@ -135,7 +135,7 @@
             <td width="2%"></td>
             <td width="32%">
                 <div class="summary-card">
-                    <div class="number">${{ number_format($assets->sum('purchase_price'), 2) }}</div>
+                    <div class="number">{{ number_format($assets->sum('purchase_price'), 0, ',', ' ') }} FCFA</div>
                     <div class="label">Total Portfolio Value</div>
                 </div>
             </td>
@@ -158,7 +158,7 @@
                 <th>Brand / Model</th>
                 <th>Location</th>
                 <th>Status</th>
-                <th>Value</th>
+                <th>Value (FCFA)</th>
             </tr>
         </thead>
         <tbody>
@@ -174,7 +174,7 @@
                             {{ str_replace('_', ' ', $asset->status) }}
                         </span>
                     </td>
-                    <td>${{ number_format($asset->purchase_price ?? 0, 2) }}</td>
+                    <td>{{ number_format($asset->purchase_price ?? 0, 0, ',', ' ') }} FCFA</td>
                 </tr>
             @empty
                 <tr>
