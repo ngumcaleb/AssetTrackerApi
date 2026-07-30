@@ -33,7 +33,6 @@
         .animate-pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }
         @media print { header, aside, .no-print { display: none !important; } main { margin-left: 0 !important; padding-top: 1rem !important; } }
     </style>
-    @vite(['resources/js/app.js'])
     @stack('head')
 </head>
 <body class="font-sans antialiased bg-surface text-on-surface min-h-dvh pt-14 lg:pt-16 overflow-x-hidden">

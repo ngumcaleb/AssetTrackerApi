@@ -27,7 +27,6 @@
         .animate-fade-in { animation: fadeIn 0.4s ease-out both; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
-    @vite(['resources/js/app.js'])
 </head>
 <body class="font-sans antialiased bg-surface text-on-surface min-h-screen flex flex-col overflow-x-hidden">
 
