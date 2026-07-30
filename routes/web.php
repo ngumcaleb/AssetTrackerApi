@@ -75,3 +75,13 @@ Route::middleware('auth:web')->group(function () {
     Route::get('/scan', [ScanController::class, 'index'])->name('scan.index');
     Route::post('/scan/lookup', [ScanController::class, 'lookup'])->name('scan.lookup');
 });
+
+// Fallback storage route for shared hosting environments where symlink is missing or disabled
+Route::get('/storage/{path}', function ($path) {
+    $filePath = storage_path('app/public/' . $path);
+    if (!file_exists($filePath)) {
+        abort(404);
+    }
+    return response()->file($filePath);
+})->where('path', '.*');
+
