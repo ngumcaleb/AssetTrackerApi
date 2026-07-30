@@ -1,3 +1,6 @@
 Options -Indexes
 RewriteEngine On
+# Only rewrite if the file does NOT already exist at the current path.
+# This prevents infinite loops when Apache re-evaluates after the first rewrite.
+RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^(.*)$ app/public/$1 [L]

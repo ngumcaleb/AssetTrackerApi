@@ -11,8 +11,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Support shared hosting environments where public folder contents are placed directly in public_html / root
-        if (! is_dir($this->app->basePath('public')) || (! file_exists($this->app->basePath('public/build/manifest.json')) && file_exists($this->app->basePath('build/manifest.json')))) {
+        // Detect shared hosting setups where Laravel's public/ folder contents
+        // (index.php, .htaccess, etc.) are served directly from public_html root,
+        // meaning there is no public/ subdirectory below the project root.
+        $publicDir = $this->app->basePath('public');
+        if (! is_dir($publicDir) || ! file_exists($publicDir . '/index.php')) {
             $this->app->usePublicPath($this->app->basePath());
         }
     }
