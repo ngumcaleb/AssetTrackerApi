@@ -86,21 +86,72 @@
 
     <div class="lg:col-span-2 bg-white rounded-2xl border border-outline-variant/30 shadow-[0_2px_20px_-4px_rgba(0,0,0,0.04)] p-6">
         <div class="flex items-center justify-between mb-5">
-            <h2 class="font-bold text-lg text-on-surface">Recent Activity</h2>
-            <a href="{{ route('activity.index') }}" class="text-sm font-semibold text-brand-700 hover:text-brand-800 transition-colors">View all</a>
+            <div>
+                <h2 class="font-bold text-lg text-on-surface">Recent Activity</h2>
+                <p class="text-xs text-on-surface-variant">Live audit log of check-ins and check-outs</p>
+            </div>
+            <a href="{{ route('activity.index') }}" class="text-xs font-semibold text-brand-700 hover:text-brand-800 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-lg transition-colors">
+                View full log &rarr;
+            </a>
         </div>
         @if($recentActivity->count())
-            <div class="relative pl-6 space-y-0 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-px before:bg-outline-variant/40">
+            <div class="relative pl-8 space-y-0 before:absolute before:left-[15px] before:top-3 before:bottom-3 before:w-0.5 before:bg-outline-variant/20">
                 @foreach($recentActivity as $log)
-                    <div class="relative pb-4 last:pb-0">
-                        <div class="absolute -left-[19px] top-1.5 w-[18px] h-[18px] rounded-full border-2 border-white bg-brand-100 flex items-center justify-center">
-                            <div class="w-[6px] h-[6px] rounded-full bg-brand-500"></div>
+                    @php
+                        $isCheckIn = in_array($log->type, ['asset_checked_in', 'check_in', 'returned']);
+                        $isCheckOut = in_array($log->type, ['asset_checked_out', 'check_out', 'checkout']);
+                    @endphp
+                    <div class="relative pb-4 last:pb-0 group">
+                        {{-- Color-Coded Icon Node --}}
+                        <div class="absolute -left-[31px] top-1 w-8 h-8 rounded-full border-2 border-white flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm
+                            @if($isCheckIn)
+                                bg-emerald-50 text-emerald-600 border-emerald-500
+                            @elseif($isCheckOut)
+                                bg-rose-50 text-rose-600 border-rose-500
+                            @elseif($log->type === 'asset_created')
+                                bg-sky-50 text-sky-600 border-sky-500
+                            @else
+                                bg-slate-50 text-slate-600 border-slate-400
+                            @endif">
+                            @if($isCheckIn)
+                                <svg class="w-4 h-4 stroke-[2.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" /></svg>
+                            @elseif($isCheckOut)
+                                <svg class="w-4 h-4 stroke-[2.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" /></svg>
+                            @elseif($log->type === 'asset_created')
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                            @else
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            @endif
                         </div>
-                        <div class="flex items-start gap-3">
+
+                        {{-- Activity Card Container --}}
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl transition-colors
+                            @if($isCheckIn)
+                                bg-emerald-50/50 border border-emerald-100/60
+                            @elseif($isCheckOut)
+                                bg-rose-50/50 border border-rose-100/60
+                            @else
+                                bg-surface-low/40 border border-transparent
+                            @endif">
                             <div class="flex-1 min-w-0">
-                                <span class="block text-sm text-on-surface font-medium">{{ $log->description }}</span>
-                                <span class="text-xs text-on-surface-variant">{{ $log->user?->name }} · {{ $log->created_at->diffForHumans() }}</span>
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider
+                                        @if($isCheckIn) bg-emerald-600 text-white
+                                        @elseif($isCheckOut) bg-rose-600 text-white
+                                        @elseif($log->type === 'asset_created') bg-sky-600 text-white
+                                        @else bg-slate-600 text-white @endif">
+                                        @if($isCheckIn) IN @elseif($isCheckOut) OUT @else {{ str_replace(['asset_', '_'], ['', ' '], $log->type) }} @endif
+                                    </span>
+                                    <span class="text-[11px] text-on-surface-variant/70 font-mono">{{ $log->created_at->format('H:i') }}</span>
+                                </div>
+
+                                <p class="text-xs font-semibold text-on-surface leading-snug">{{ $log->description }}</p>
+                                <p class="text-[11px] text-on-surface-variant mt-0.5">By <strong>{{ $log->user?->name ?? 'System' }}</strong></p>
                             </div>
+
+                            <span class="text-[11px] font-medium text-on-surface-variant/70 whitespace-nowrap self-start sm:self-center shrink-0">
+                                {{ $log->created_at->diffForHumans() }}
+                            </span>
                         </div>
                     </div>
                 @endforeach

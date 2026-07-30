@@ -64,6 +64,11 @@ class Asset extends Model
         return $this->hasOne(CheckOut::class)->whereNull('returned_at');
     }
 
+    public function activeCheckout(): HasOne
+    {
+        return $this->hasOne(CheckOut::class)->whereNull('returned_at');
+    }
+
     public function activityLogs(): HasMany
     {
         return $this->hasMany(ActivityLog::class);

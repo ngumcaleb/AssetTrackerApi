@@ -35,7 +35,7 @@
                         ['label' => 'Model', 'value' => $asset->model ?? '-'],
                         ['label' => 'Location', 'value' => $asset->location ?? '-'],
                         ['label' => 'Purchase Date', 'value' => $asset->purchase_date?->format('M d, Y') ?? '-'],
-                        ['label' => 'Purchase Price', 'value' => $asset->purchase_price ? '$'.number_format($asset->purchase_price, 2) : '-'],
+                        ['label' => 'Purchase Price', 'value' => $asset->purchase_price ? number_format($asset->purchase_price, 0, ',', ' ') . ' FCFA' : '-'],
                         ['label' => 'Supplier', 'value' => $asset->supplier ?? '-'],
                         ['label' => 'Condition', 'value' => $asset->condition ?? '-'],
                     ];

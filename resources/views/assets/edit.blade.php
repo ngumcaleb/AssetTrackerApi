@@ -63,7 +63,7 @@
             </div>
 
             <div>
-                <label for="purchase_price" class="block text-sm font-medium text-on-surface mb-1.5">Purchase Price ($)</label>
+                <label for="purchase_price" class="block text-sm font-medium text-on-surface mb-1.5">Purchase Price (FCFA)</label>
                 <input id="purchase_price" type="number" step="0.01" name="purchase_price" value="{{ old('purchase_price', $asset->purchase_price) }}" class="w-full h-11 px-4 bg-surface-low/70 border border-outline-variant/30 focus:border-brand-500 focus:ring-2 focus:ring-brand-200/50 rounded-xl text-sm text-on-surface outline-none transition-all">
             </div>
 
