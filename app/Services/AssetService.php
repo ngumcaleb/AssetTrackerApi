@@ -205,10 +205,49 @@ class AssetService
 
     public function findByCode(string $code): ?Asset
     {
+        $raw = trim($code);
+        if ($raw === '') {
+            return null;
+        }
+
+        // Web-printed QR codes encode the asset show URL, e.g.
+        // https://assettracker.nolivers.com/assets/12
+        if (preg_match('#/assets/(\d+)(?:/|$|\?|#)#i', $raw, $matches)) {
+            return Asset::with(['category', 'creator', 'currentCheckout'])
+                ->find((int) $matches[1]);
+        }
+
+        // Deep-link style: assettracker://asset/AST-2026-0001 or .../asset/12
+        if (preg_match('#(?:assettracker://|/)(?:asset|assets)/([A-Za-z0-9\-]+)#i', $raw, $matches)) {
+            $token = $matches[1];
+            if (ctype_digit($token)) {
+                return Asset::with(['category', 'creator', 'currentCheckout'])
+                    ->find((int) $token);
+            }
+
+            return Asset::with(['category', 'creator', 'currentCheckout'])
+                ->where(function ($q) use ($token) {
+                    $q->where('asset_tag', $token)
+                        ->orWhere('serial', $token);
+                })
+                ->first();
+        }
+
+        // Plain numeric ID
+        if (ctype_digit($raw)) {
+            $byId = Asset::with(['category', 'creator', 'currentCheckout'])->find((int) $raw);
+            if ($byId) {
+                return $byId;
+            }
+        }
+
+        // Exact asset tag / serial (case-insensitive for tags)
         return Asset::with(['category', 'creator', 'currentCheckout'])
-            ->where(function ($q) use ($code) {
-                $q->where('asset_tag', $code)
-                    ->orWhere('serial', $code);
+            ->where(function ($q) use ($raw) {
+                $q->whereRaw('LOWER(asset_tag) = ?', [mb_strtolower($raw)])
+                    ->orWhereRaw('LOWER(serial) = ?', [mb_strtolower($raw)])
+                    ->orWhere('asset_tag', $raw)
+                    ->orWhere('serial', $raw);
             })
             ->first();
     }

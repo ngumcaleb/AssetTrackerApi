@@ -82,9 +82,12 @@ Route::middleware('auth:web')->group(function () {
 // Fallback storage route for shared hosting environments where symlink is missing or disabled
 Route::get('/storage/{path}', function ($path) {
     $filePath = storage_path('app/public/' . $path);
-    if (!file_exists($filePath)) {
+    if (! file_exists($filePath) || ! is_file($filePath)) {
         abort(404);
     }
-    return response()->file($filePath);
-})->where('path', '.*');
 
+    return response()->file($filePath, [
+        'Cache-Control' => 'public, max-age=604800',
+        'Access-Control-Allow-Origin' => '*',
+    ]);
+})->where('path', '.*')->name('storage.fallback');

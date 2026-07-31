@@ -43,10 +43,22 @@ class AssetResource extends JsonResource
             return null;
         }
 
-        if (str_starts_with($this->photo_url, 'http://') || str_starts_with($this->photo_url, 'https://')) {
-            return $this->photo_url;
+        $path = str_replace('\\', '/', (string) $this->photo_url);
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
         }
 
-        return url('storage/'.$this->photo_url);
+        // Normalize DB values like "assets/photos/x.jpg" or "storage/assets/photos/x.jpg"
+        $path = ltrim($path, '/');
+        if (str_starts_with($path, 'storage/')) {
+            $path = substr($path, strlen('storage/'));
+        }
+
+        // Prefer the current request host so mobile clients never get a stale APP_URL
+        // (e.g. localhost) from shared-hosting env files.
+        $base = rtrim(request()->getSchemeAndHttpHost().request()->getBasePath(), '/');
+
+        return $base.'/storage/'.$path;
     }
 }
