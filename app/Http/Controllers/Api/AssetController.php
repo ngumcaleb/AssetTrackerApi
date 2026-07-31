@@ -123,6 +123,7 @@ class AssetController extends Controller
     {
         $request->validate([
             'name' => 'sometimes|string|max:255',
+            'asset_tag' => 'sometimes|string|max:255|unique:assets,asset_tag,' . $asset->id,
             'serial' => 'sometimes|string|unique:assets,serial,' . $asset->id,
             'category_id' => 'sometimes|exists:categories,id',
             'status' => 'sometimes|in:active,archived,checked_out,discarded',
@@ -135,6 +136,7 @@ class AssetController extends Controller
             'description' => 'nullable|string',
             'condition' => 'nullable|string|max:255',
             'archived_reason' => 'nullable|string|max:255',
+            'discarded_reason' => 'nullable|string|max:255',
         ]);
 
         $oldStatus = $asset->status;

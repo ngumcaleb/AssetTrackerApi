@@ -24,6 +24,7 @@ class CategoryController extends Controller
             'name' => 'required|string|max:255|unique:categories',
             'icon' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:500',
+            'is_active' => 'nullable|boolean',
         ]);
 
         $category = Category::create([
@@ -31,6 +32,7 @@ class CategoryController extends Controller
             'slug' => Str::slug($request->name),
             'icon' => $request->icon,
             'description' => $request->description,
+            'is_active' => $request->has('is_active') ? $request->boolean('is_active') : true,
         ]);
 
         return (new CategoryResource($category))->response()->setStatusCode(201);

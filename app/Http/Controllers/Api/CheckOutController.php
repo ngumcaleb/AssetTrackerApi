@@ -17,8 +17,25 @@ class CheckOutController extends Controller
     {
         $query = CheckOut::with(['asset', 'user']);
 
-        if ($request->has('active') && $request->boolean('active')) {
+        if ($request->has('status')) {
+            if ($request->status === 'active') {
+                $query->whereNull('returned_at');
+            } elseif ($request->status === 'returned') {
+                $query->whereNotNull('returned_at');
+            }
+        } elseif ($request->has('active') && $request->boolean('active')) {
             $query->whereNull('returned_at');
+        }
+
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('assignee_name', 'like', "%{$search}%")
+                    ->orWhereHas('asset', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%")
+                            ->orWhere('asset_tag', 'like', "%{$search}%");
+                    });
+            });
         }
 
         if ($request->has('asset_id')) {

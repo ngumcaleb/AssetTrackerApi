@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Asset;
 use App\Models\CheckOut;
 use Illuminate\Http\JsonResponse;
@@ -36,14 +37,21 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        $recentActivity = ActivityLog::with('user')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
         return response()->json([
             'total' => $total,
             'active' => $active,
+            'archived' => $archived,
             'damaged' => $damaged,
             'expired' => $expired,
             'checked_out' => $checkedOut,
             'recent_checkouts' => $recentCheckouts,
             'recent_assets' => $recentAssets,
+            'recent_activity' => $recentActivity,
         ]);
     }
 }
