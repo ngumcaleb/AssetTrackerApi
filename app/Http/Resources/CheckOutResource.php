@@ -15,10 +15,16 @@ class CheckOutResource extends JsonResource
             'department' => $this->department,
             'purpose' => $this->purpose,
             'destination' => $this->destination,
-            'expected_return' => $this->expected_return?->toDateString(),
+            'expected_return' => $this->expected_return
+                ? ($this->expected_return instanceof \DateTimeInterface ? $this->expected_return->toDateString() : (string) $this->expected_return)
+                : null,
             'notes' => $this->notes,
-            'checked_out_at' => $this->checked_out_at->toIso8601String(),
-            'returned_at' => $this->returned_at?->toIso8601String(),
+            'checked_out_at' => $this->checked_out_at
+                ? ($this->checked_out_at instanceof \DateTimeInterface ? $this->checked_out_at->toIso8601String() : (string) $this->checked_out_at)
+                : now()->toIso8601String(),
+            'returned_at' => $this->returned_at
+                ? ($this->returned_at instanceof \DateTimeInterface ? $this->returned_at->toIso8601String() : (string) $this->returned_at)
+                : null,
             'return_notes' => $this->return_notes,
             'asset' => new AssetResource($this->whenLoaded('asset')),
             'user' => new UserResource($this->whenLoaded('user')),

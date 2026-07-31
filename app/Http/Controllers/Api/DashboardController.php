@@ -18,52 +18,59 @@ class DashboardController extends Controller
 
     public function summary(): JsonResponse
     {
-        $total = Asset::count();
-        $active = Asset::active()->count();
-        $archived = Asset::archived()->count();
-        $discarded = Asset::discarded()->count();
-        $checkedOut = Asset::checkedOut()->count();
+        try {
+            $total = Asset::count();
+            $active = Asset::active()->count();
+            $archived = Asset::archived()->count();
+            $discarded = Asset::discarded()->count();
+            $checkedOut = Asset::checkedOut()->count();
 
-        $damaged = Asset::where('status', 'archived')
-            ->where(function ($q) {
-                $q->where('archived_reason', 'like', '%damage%')
-                    ->orWhere('condition', 'like', '%poor%')
-                    ->orWhere('condition', 'like', '%damage%');
-            })
-            ->count();
+            $damaged = Asset::where('status', 'archived')
+                ->where(function ($q) {
+                    $q->where('archived_reason', 'like', '%damage%')
+                        ->orWhere('condition', 'like', '%poor%')
+                        ->orWhere('condition', 'like', '%damage%');
+                })
+                ->count();
 
-        $expired = CheckOut::whereNull('returned_at')
-            ->whereNotNull('expected_return')
-            ->whereDate('expected_return', '<', now()->toDateString())
-            ->count();
+            $expired = CheckOut::whereNull('returned_at')
+                ->whereNotNull('expected_return')
+                ->whereDate('expected_return', '<', now()->toDateString())
+                ->count();
 
-        $recentCheckouts = CheckOut::with('asset')
-            ->whereNull('returned_at')
-            ->orderByDesc('checked_out_at')
-            ->limit(5)
-            ->get();
+            $recentCheckouts = CheckOut::with('asset')
+                ->whereNull('returned_at')
+                ->orderByDesc('checked_out_at')
+                ->limit(5)
+                ->get();
 
-        $recentAssets = Asset::with('category')
-            ->latest()
-            ->limit(5)
-            ->get();
+            $recentAssets = Asset::with('category')
+                ->latest()
+                ->limit(5)
+                ->get();
 
-        $recentActivity = ActivityLog::with(['user', 'asset'])
-            ->orderByDesc('created_at')
-            ->limit(5)
-            ->get();
+            $recentActivity = ActivityLog::with(['user', 'asset'])
+                ->orderByDesc('created_at')
+                ->limit(5)
+                ->get();
 
-        return response()->json([
-            'total' => $total,
-            'active' => $active,
-            'archived' => $archived,
-            'discarded' => $discarded,
-            'damaged' => $damaged,
-            'expired' => $expired,
-            'checked_out' => $checkedOut,
-            'recent_checkouts' => CheckOutResource::collection($recentCheckouts)->resolve(),
-            'recent_assets' => AssetResource::collection($recentAssets)->resolve(),
-            'recent_activity' => ActivityLogResource::collection($recentActivity)->resolve(),
-        ]);
+            return response()->json([
+                'total' => $total,
+                'active' => $active,
+                'archived' => $archived,
+                'discarded' => $discarded,
+                'damaged' => $damaged,
+                'expired' => $expired,
+                'checked_out' => $checkedOut,
+                'recent_checkouts' => CheckOutResource::collection($recentCheckouts)->resolve(),
+                'recent_assets' => AssetResource::collection($recentAssets)->resolve(),
+                'recent_activity' => ActivityLogResource::collection($recentActivity)->resolve(),
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Failed to load dashboard summary',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

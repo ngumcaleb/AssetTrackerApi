@@ -18,17 +18,25 @@ class AssetResource extends JsonResource
             'photo_url' => $this->resolvePhotoUrl(),
             'brand' => $this->brand,
             'model' => $this->model,
-            'purchase_date' => $this->purchase_date?->toDateString(),
+            'purchase_date' => $this->purchase_date
+                ? ($this->purchase_date instanceof \DateTimeInterface ? $this->purchase_date->toDateString() : (string) $this->purchase_date)
+                : null,
             'purchase_price' => $this->purchase_price,
             'condition' => $this->condition,
             'supplier' => $this->supplier,
             'location' => $this->location,
             'description' => $this->description,
-            'archived_at' => $this->archived_at?->toIso8601String(),
+            'archived_at' => $this->archived_at
+                ? ($this->archived_at instanceof \DateTimeInterface ? $this->archived_at->toIso8601String() : (string) $this->archived_at)
+                : null,
             'archived_reason' => $this->archived_reason,
-            'discarded_at' => $this->discarded_at?->toIso8601String(),
+            'discarded_at' => $this->discarded_at
+                ? ($this->discarded_at instanceof \DateTimeInterface ? $this->discarded_at->toIso8601String() : (string) $this->discarded_at)
+                : null,
             'discarded_reason' => $this->discarded_reason,
-            'created_at' => $this->created_at->toIso8601String(),
+            'created_at' => $this->created_at
+                ? ($this->created_at instanceof \DateTimeInterface ? $this->created_at->toIso8601String() : (string) $this->created_at)
+                : now()->toIso8601String(),
             'category' => new CategoryResource($this->whenLoaded('category')),
             'creator' => new UserResource($this->whenLoaded('creator')),
             'current_checkout' => new CheckOutResource($this->whenLoaded('currentCheckout')),

@@ -14,7 +14,9 @@ class ActivityLogResource extends JsonResource
             'type' => $this->type,
             'description' => $this->description,
             'metadata' => $this->metadata,
-            'created_at' => $this->created_at->toIso8601String(),
+            'created_at' => $this->created_at
+                ? ($this->created_at instanceof \DateTimeInterface ? $this->created_at->toIso8601String() : (string) $this->created_at)
+                : now()->toIso8601String(),
             'asset' => new AssetResource($this->whenLoaded('asset')),
             'user' => new UserResource($this->whenLoaded('user')),
         ];
