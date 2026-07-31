@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('asset_tag')->unique();
             $table->string('serial')->unique();
             $table->foreignId('category_id')->constrained()->cascadeOnDelete();
-            $table->enum('status', ['active', 'archived', 'checked_out'])->default('active');
+            $table->enum('status', ['active', 'archived', 'checked_out', 'discarded'])->default('active');
             $table->string('photo_url')->nullable();
             $table->string('brand')->nullable();
             $table->string('model')->nullable();

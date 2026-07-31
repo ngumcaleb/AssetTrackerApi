@@ -15,7 +15,7 @@ class AssetResource extends JsonResource
             'asset_tag' => $this->asset_tag,
             'serial' => $this->serial,
             'status' => $this->status,
-            'photo_url' => $this->photo_url ? url('storage/' . $this->photo_url) : null,
+            'photo_url' => $this->resolvePhotoUrl(),
             'brand' => $this->brand,
             'model' => $this->model,
             'purchase_date' => $this->purchase_date?->toDateString(),
@@ -35,5 +35,18 @@ class AssetResource extends JsonResource
             'checkouts' => CheckOutResource::collection($this->whenLoaded('checkouts')),
             'activity_logs' => ActivityLogResource::collection($this->whenLoaded('activityLogs')),
         ];
+    }
+
+    protected function resolvePhotoUrl(): ?string
+    {
+        if (! $this->photo_url) {
+            return null;
+        }
+
+        if (str_starts_with($this->photo_url, 'http://') || str_starts_with($this->photo_url, 'https://')) {
+            return $this->photo_url;
+        }
+
+        return url('storage/'.$this->photo_url);
     }
 }

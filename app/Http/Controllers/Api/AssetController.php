@@ -2,234 +2,149 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\RespondsWithJson;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\ArchiveAssetRequest;
+use App\Http\Requests\Api\StoreAssetRequest;
+use App\Http\Requests\Api\UpdateAssetRequest;
 use App\Http\Resources\AssetResource;
-use App\Models\ActivityLog;
 use App\Models\Asset;
+use App\Services\AssetService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class AssetController extends Controller
 {
+    use RespondsWithJson;
+
+    public function __construct(
+        protected AssetService $assets
+    ) {}
+
     public function index(Request $request)
     {
-        $query = Asset::with(['category', 'creator']);
+        if ($request->filled('code')) {
+            return $this->lookup($request);
+        }
 
-        if ($request->has('archived') && $request->boolean('archived')) {
+        $query = Asset::with(['category', 'creator', 'currentCheckout']);
+
+        if ($request->boolean('archived')) {
             $query->archived();
-        } elseif ($request->has('status')) {
-            $query->where('status', $request->status);
+        } elseif ($request->filled('status')) {
+            $query->where('status', $request->string('status'));
         } else {
             $query->whereIn('status', ['active', 'checked_out']);
         }
 
-        if ($request->has('code')) {
-            $asset = $query->where('asset_tag', $request->code)
-                ->orWhere('serial', $request->code)
-                ->first();
-
-            if (! $asset) {
-                return response()->json(['message' => 'Asset not found.'], 404);
-            }
-
-            return response()->json(new AssetResource($asset));
-        }
-
-        if ($request->has('search')) {
-            $search = $request->search;
+        if ($request->filled('search')) {
+            $search = $request->string('search')->toString();
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('asset_tag', 'like', "%{$search}%")
                     ->orWhere('serial', 'like', "%{$search}%")
                     ->orWhere('brand', 'like', "%{$search}%")
-                    ->orWhere('model', 'like', "%{$search}%");
+                    ->orWhere('model', 'like', "%{$search}%")
+                    ->orWhere('location', 'like', "%{$search}%");
             });
         }
 
-        if ($request->has('category_id')) {
-            $query->where('category_id', $request->category_id);
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->integer('category_id'));
         }
 
-        $assets = $query->orderBy('created_at', 'desc')->paginate($request->get('per_page', 20));
+        if ($request->filled('location')) {
+            $query->where('location', 'like', '%'.$request->string('location').'%');
+        }
 
-        return AssetResource::collection($assets);
+        if ($request->filled('condition')) {
+            $query->where('condition', $request->string('condition'));
+        }
+
+        $assets = $query->orderByDesc('created_at')
+            ->paginate($request->integer('per_page', 20));
+
+        return $this->respondCollection(AssetResource::collection($assets));
     }
 
-    public function store(Request $request): JsonResponse
+    public function lookup(Request $request): JsonResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'serial' => 'required|string|unique:assets',
-            'category_id' => 'required|exists:categories,id',
-            'brand' => 'nullable|string|max:255',
-            'model' => 'nullable|string|max:255',
-            'purchase_date' => 'nullable|date',
-            'purchase_price' => 'nullable|numeric|min:0',
-            'supplier' => 'nullable|string|max:255',
-            'location' => 'nullable|string|max:255',
-            'condition' => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-            'photo' => 'nullable|image|max:5120',
-        ]);
+        $code = $request->string('code')->trim()->toString();
 
-        $assetTag = DB::transaction(function () {
-            $latest = Asset::lockForUpdate()->latest('id')->first();
-            $nextNumber = $latest ? (int) substr($latest->asset_tag, -4) + 1 : 1;
-            return 'AST-' . date('Y') . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-        });
-
-        $photoUrl = null;
-        if ($request->hasFile('photo')) {
-            $photoUrl = $request->file('photo')->store('assets/photos', 'public');
+        if ($code === '') {
+            return $this->error('A code (asset tag or serial) is required.', 422);
         }
 
-        $asset = Asset::create([
-            'name' => $request->name,
-            'asset_tag' => $assetTag,
-            'serial' => $request->serial,
-            'category_id' => $request->category_id,
-            'photo_url' => $photoUrl,
-            'brand' => $request->brand,
-            'model' => $request->model,
-            'purchase_date' => $request->purchase_date,
-            'purchase_price' => $request->purchase_price,
-            'supplier' => $request->supplier,
-            'location' => $request->location,
-            'condition' => $request->condition,
-            'description' => $request->description,
-            'created_by' => $request->user()->id,
-        ]);
+        $asset = $this->assets->findByCode($code);
 
-        ActivityLog::create([
-            'type' => 'asset_created',
-            'asset_id' => $asset->id,
-            'user_id' => $request->user()->id,
-            'description' => "Asset \"{$asset->name}\" registered ({$asset->asset_tag})",
-        ]);
+        if (! $asset) {
+            return $this->error('Asset not found.', 404);
+        }
 
-        return (new AssetResource($asset->load(['category', 'creator'])))->response()->setStatusCode(201);
+        return $this->respond(new AssetResource($asset));
+    }
+
+    public function store(StoreAssetRequest $request): JsonResponse
+    {
+        $asset = $this->assets->create(
+            $request->safe()->except(['photo']),
+            $request->user(),
+            $request->file('photo')
+        );
+
+        return $this->respond(new AssetResource($asset), 201);
     }
 
     public function show(Asset $asset): JsonResponse
     {
-        return response()->json(new AssetResource($asset->load(['category', 'creator', 'currentCheckout', 'checkouts' => function ($q) {
-            $q->latest()->limit(5);
-        }])));
-    }
-
-    public function update(Request $request, Asset $asset): JsonResponse
-    {
-        $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'asset_tag' => 'sometimes|string|max:255|unique:assets,asset_tag,' . $asset->id,
-            'serial' => 'sometimes|string|unique:assets,serial,' . $asset->id,
-            'category_id' => 'sometimes|exists:categories,id',
-            'status' => 'sometimes|in:active,archived,checked_out,discarded',
-            'brand' => 'nullable|string|max:255',
-            'model' => 'nullable|string|max:255',
-            'purchase_date' => 'nullable|date',
-            'purchase_price' => 'nullable|numeric|min:0',
-            'supplier' => 'nullable|string|max:255',
-            'location' => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-            'condition' => 'nullable|string|max:255',
-            'archived_reason' => 'nullable|string|max:255',
-            'discarded_reason' => 'nullable|string|max:255',
+        $asset->load([
+            'category',
+            'creator',
+            'currentCheckout.user',
+            'checkouts' => fn ($q) => $q->latest()->limit(5),
+            'activityLogs' => fn ($q) => $q->latest()->limit(10),
         ]);
 
-        $oldStatus = $asset->status;
-        $asset->update($request->except(['photo']));
+        return $this->respond(new AssetResource($asset));
+    }
 
-        if ($request->hasFile('photo')) {
-            $asset->photo_url = $request->file('photo')->store('assets/photos', 'public');
-            $asset->save();
-        }
+    public function update(UpdateAssetRequest $request, Asset $asset): JsonResponse
+    {
+        $asset = $this->assets->update(
+            $asset,
+            $request->safe()->except(['photo']),
+            $request->user(),
+            $request->file('photo')
+        );
 
-        if ($request->status === 'archived' && $oldStatus !== 'archived') {
-            $asset->update([
-                'archived_at' => now(),
-                'archived_reason' => $request->archived_reason ?? 'Archived by user',
-            ]);
-
-            ActivityLog::create([
-                'type' => 'asset_archived',
-                'asset_id' => $asset->id,
-                'user_id' => $request->user()->id,
-                'description' => "Asset \"{$asset->name}\" archived",
-                'metadata' => ['reason' => $asset->archived_reason],
-            ]);
-        }
-
-        if ($request->status === 'discarded' && $oldStatus !== 'discarded') {
-            $asset->update([
-                'discarded_at' => now(),
-                'discarded_reason' => $request->discarded_reason ?? 'Discarded by user',
-            ]);
-
-            ActivityLog::create([
-                'type' => 'asset_discarded',
-                'asset_id' => $asset->id,
-                'user_id' => $request->user()->id,
-                'description' => "Asset \"{$asset->name}\" discarded",
-                'metadata' => ['reason' => $asset->discarded_reason],
-            ]);
-        }
-
-        if ($request->status === 'active' && $oldStatus === 'archived') {
-            $asset->update([
-                'archived_at' => null,
-                'archived_reason' => null,
-            ]);
-
-            ActivityLog::create([
-                'type' => 'asset_restored',
-                'asset_id' => $asset->id,
-                'user_id' => $request->user()->id,
-                'description' => "Asset \"{$asset->name}\" restored from archive",
-            ]);
-        }
-
-        return response()->json(new AssetResource($asset->load(['category', 'creator'])));
+        return $this->respond(new AssetResource($asset));
     }
 
     public function destroy(Asset $asset, Request $request): JsonResponse
     {
-        $name = $asset->name;
-        $tag = $asset->asset_tag;
+        $this->assets->delete($asset, $request->user());
 
-        $asset->delete();
-
-        ActivityLog::create([
-            'type' => 'asset_deleted',
-            'asset_id' => null,
-            'user_id' => $request->user()->id,
-            'description' => "Asset \"{$name}\" ({$tag}) permanently deleted",
-        ]);
-
-        return response()->json(['message' => 'Asset deleted successfully.']);
+        return $this->message('Asset deleted successfully.');
     }
 
     public function restore(Asset $asset, Request $request): JsonResponse
     {
-        if ($asset->status !== 'archived') {
-            return response()->json(['message' => 'Asset is not archived.'], 400);
-        }
+        $asset = $this->assets->restore($asset, $request->user());
 
-        $asset->update([
-            'status' => 'active',
-            'archived_at' => null,
-            'archived_reason' => null,
-        ]);
+        return $this->respond(new AssetResource($asset));
+    }
 
-        ActivityLog::create([
-            'type' => 'asset_restored',
-            'asset_id' => $asset->id,
-            'user_id' => $request->user()->id,
-            'description' => "Asset \"{$asset->name}\" restored from archive",
-        ]);
+    public function archive(ArchiveAssetRequest $request, Asset $asset): JsonResponse
+    {
+        $asset = $this->assets->archive($asset, $request->user(), $request->string('reason')->toString());
 
-        return response()->json($asset->load(['category', 'creator']));
+        return $this->respond(new AssetResource($asset));
+    }
+
+    public function discard(ArchiveAssetRequest $request, Asset $asset): JsonResponse
+    {
+        $asset = $this->assets->discard($asset, $request->user(), $request->string('reason')->toString());
+
+        return $this->respond(new AssetResource($asset));
     }
 }

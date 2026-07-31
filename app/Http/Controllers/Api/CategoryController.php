@@ -2,71 +2,69 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\RespondsWithJson;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\StoreCategoryRequest;
+use App\Http\Requests\Api\UpdateCategoryRequest;
 use App\Http\Resources\CategoryResource;
 use App\Models\Category;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
+    use RespondsWithJson;
+
     public function index()
     {
-        $categories = Category::withCount('assets')->orderBy('name')->get();
+        $categories = Category::withCount('assets')
+            ->orderBy('name')
+            ->get();
 
-        return CategoryResource::collection($categories);
+        return $this->respondCollection(CategoryResource::collection($categories));
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreCategoryRequest $request): JsonResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255|unique:categories',
-            'icon' => 'nullable|string|max:255',
-            'description' => 'nullable|string|max:500',
-            'is_active' => 'nullable|boolean',
-        ]);
-
         $category = Category::create([
             'name' => $request->name,
             'slug' => Str::slug($request->name),
             'icon' => $request->icon,
             'description' => $request->description,
-            'is_active' => $request->has('is_active') ? $request->boolean('is_active') : true,
+            'is_active' => $request->boolean('is_active', true),
         ]);
 
-        return (new CategoryResource($category))->response()->setStatusCode(201);
+        return $this->respond(new CategoryResource($category->loadCount('assets')), 201);
     }
 
     public function show(Category $category): JsonResponse
     {
-        return response()->json(new CategoryResource($category->loadCount('assets')->load('assets')));
+        return $this->respond(
+            new CategoryResource($category->loadCount('assets'))
+        );
     }
 
-    public function update(Request $request, Category $category): JsonResponse
+    public function update(UpdateCategoryRequest $request, Category $category): JsonResponse
     {
-        $request->validate([
-            'name' => 'sometimes|string|max:255|unique:categories,name,' . $category->id,
-            'icon' => 'nullable|string|max:255',
-            'description' => 'nullable|string|max:500',
-            'is_active' => 'sometimes|boolean',
-        ]);
+        $data = $request->safe()->only(['name', 'icon', 'description', 'is_active']);
 
-        $category->update($request->only(['name', 'icon', 'description', 'is_active']));
+        if (isset($data['name']) && $data['name'] !== $category->name) {
+            $data['slug'] = Str::slug($data['name']);
+        }
 
-        return response()->json(new CategoryResource($category));
+        $category->update($data);
+
+        return $this->respond(new CategoryResource($category->fresh()->loadCount('assets')));
     }
 
     public function destroy(Category $category): JsonResponse
     {
-        if ($category->assets()->count() > 0) {
-            return response()->json([
-                'message' => 'Cannot delete category with associated assets.',
-            ], 400);
+        if ($category->assets()->exists()) {
+            return $this->error('Cannot delete category with associated assets.', 400);
         }
 
         $category->delete();
 
-        return response()->json(['message' => 'Category deleted successfully.']);
+        return $this->message('Category deleted successfully.');
     }
 }

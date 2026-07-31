@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -25,6 +26,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Keep default "data" wrapping for Resource::collection / paginated lists
+        // so mobile clients can rely on { data, meta }. Single resources are
+        // returned via respond() which calls resolve() without an outer wrap.
+        JsonResource::wrap('data');
     }
 }

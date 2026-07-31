@@ -2,33 +2,44 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\RespondsWithJson;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ActivityLogResource;
+use App\Http\Resources\AssetResource;
+use App\Http\Resources\CheckOutResource;
 use App\Models\ActivityLog;
 use App\Models\Asset;
 use App\Models\CheckOut;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
+    use RespondsWithJson;
+
     public function summary(): JsonResponse
     {
         $total = Asset::count();
         $active = Asset::active()->count();
         $archived = Asset::archived()->count();
+        $discarded = Asset::discarded()->count();
         $checkedOut = Asset::checkedOut()->count();
 
         $damaged = Asset::where('status', 'archived')
-            ->where('archived_reason', 'like', '%damage%')
+            ->where(function ($q) {
+                $q->where('archived_reason', 'like', '%damage%')
+                    ->orWhere('condition', 'like', '%poor%')
+                    ->orWhere('condition', 'like', '%damage%');
+            })
             ->count();
 
         $expired = CheckOut::whereNull('returned_at')
-            ->where('expected_return', '<', now())
+            ->whereNotNull('expected_return')
+            ->whereDate('expected_return', '<', now()->toDateString())
             ->count();
 
         $recentCheckouts = CheckOut::with('asset')
             ->whereNull('returned_at')
-            ->orderBy('checked_out_at', 'desc')
+            ->orderByDesc('checked_out_at')
             ->limit(5)
             ->get();
 
@@ -37,8 +48,8 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        $recentActivity = ActivityLog::with('user')
-            ->orderBy('created_at', 'desc')
+        $recentActivity = ActivityLog::with(['user', 'asset'])
+            ->orderByDesc('created_at')
             ->limit(5)
             ->get();
 
@@ -46,12 +57,13 @@ class DashboardController extends Controller
             'total' => $total,
             'active' => $active,
             'archived' => $archived,
+            'discarded' => $discarded,
             'damaged' => $damaged,
             'expired' => $expired,
             'checked_out' => $checkedOut,
-            'recent_checkouts' => $recentCheckouts,
-            'recent_assets' => $recentAssets,
-            'recent_activity' => $recentActivity,
+            'recent_checkouts' => CheckOutResource::collection($recentCheckouts)->resolve(),
+            'recent_assets' => AssetResource::collection($recentAssets)->resolve(),
+            'recent_activity' => ActivityLogResource::collection($recentActivity)->resolve(),
         ]);
     }
 }

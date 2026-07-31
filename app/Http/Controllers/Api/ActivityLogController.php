@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\RespondsWithJson;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\StoreActivityLogRequest;
 use App\Http\Resources\ActivityLogResource;
 use App\Models\ActivityLog;
 use Illuminate\Http\JsonResponse;
@@ -10,20 +12,22 @@ use Illuminate\Http\Request;
 
 class ActivityLogController extends Controller
 {
+    use RespondsWithJson;
+
     public function index(Request $request)
     {
         $query = ActivityLog::with(['asset', 'user']);
 
-        if ($request->has('type')) {
-            $query->where('type', $request->type);
+        if ($request->filled('type')) {
+            $query->where('type', $request->string('type'));
         }
 
-        if ($request->has('asset_id')) {
-            $query->where('asset_id', $request->asset_id);
+        if ($request->filled('asset_id')) {
+            $query->where('asset_id', $request->integer('asset_id'));
         }
 
-        if ($request->has('search')) {
-            $search = $request->search;
+        if ($request->filled('search')) {
+            $search = $request->string('search')->toString();
             $query->where(function ($q) use ($search) {
                 $q->where('description', 'like', "%{$search}%")
                     ->orWhereHas('asset', function ($q2) use ($search) {
@@ -33,20 +37,14 @@ class ActivityLogController extends Controller
             });
         }
 
-        $logs = $query->orderBy('created_at', 'desc')->paginate($request->get('per_page', 30));
+        $logs = $query->orderByDesc('created_at')
+            ->paginate($request->integer('per_page', 30));
 
-        return ActivityLogResource::collection($logs);
+        return $this->respondCollection(ActivityLogResource::collection($logs));
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreActivityLogRequest $request): JsonResponse
     {
-        $request->validate([
-            'type' => 'required|string|max:255',
-            'asset_id' => 'nullable|exists:assets,id',
-            'description' => 'required|string',
-            'metadata' => 'nullable|array',
-        ]);
-
         $log = ActivityLog::create([
             'type' => $request->type,
             'asset_id' => $request->asset_id,
@@ -55,6 +53,6 @@ class ActivityLogController extends Controller
             'metadata' => $request->metadata,
         ]);
 
-        return (new ActivityLogResource($log->load(['asset', 'user'])))->response()->setStatusCode(201);
+        return $this->respond(new ActivityLogResource($log->load(['asset', 'user'])), 201);
     }
 }
