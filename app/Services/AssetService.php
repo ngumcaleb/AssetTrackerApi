@@ -212,7 +212,7 @@ class AssetService
 
         // Web-printed QR codes encode the asset show URL, e.g.
         // https://assettracker.nolivers.com/assets/12
-        if (preg_match('#/assets/(\d+)(?:/|$|\?|#)#i', $raw, $matches)) {
+        if (preg_match('#/assets/(\d+)(?:/|$|\?|\#)#i', $raw, $matches)) {
             return Asset::with(['category', 'creator', 'currentCheckout'])
                 ->find((int) $matches[1]);
         }
