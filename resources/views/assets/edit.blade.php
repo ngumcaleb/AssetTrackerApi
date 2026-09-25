@@ -22,14 +22,24 @@
                 <input id="name" type="text" name="name" value="{{ old('name', $asset->name) }}" required class="w-full h-11 px-4 bg-surface-low/70 border border-outline-variant/30 focus:border-brand-500 focus:ring-2 focus:ring-brand-200/50 rounded-xl text-sm text-on-surface outline-none transition-all">
             </div>
 
+            <input type="hidden" name="asset_tag" value="{{ old('asset_tag', $asset->asset_tag) }}">
+
             <div>
-                <label for="asset_tag" class="block text-sm font-medium text-on-surface mb-1.5">Asset Tag *</label>
-                <input id="asset_tag" type="text" name="asset_tag" value="{{ old('asset_tag', $asset->asset_tag) }}" required class="w-full h-11 px-4 bg-surface-low/70 border border-outline-variant/30 focus:border-brand-500 focus:ring-2 focus:ring-brand-200/50 rounded-xl text-sm text-on-surface outline-none transition-all">
+                <label for="asset_code" class="block text-sm font-medium text-on-surface mb-1.5">Asset Code</label>
+                <input id="asset_code" type="text" name="asset_code" value="{{ old('asset_code', $asset->asset_code) }}" class="w-full h-11 px-4 bg-surface-low/70 border border-outline-variant/30 focus:border-brand-500 focus:ring-2 focus:ring-brand-200/50 rounded-xl text-sm text-on-surface outline-none transition-all" placeholder="e.g. AST-001">
+                @error('asset_code') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div>
-                <label for="serial" class="block text-sm font-medium text-on-surface mb-1.5">Serial Number *</label>
-                <input id="serial" type="text" name="serial" value="{{ old('serial', $asset->serial) }}" class="w-full h-11 px-4 bg-surface-low/70 border border-outline-variant/30 focus:border-brand-500 focus:ring-2 focus:ring-brand-200/50 rounded-xl text-sm text-on-surface outline-none transition-all">
+                <label for="assigned_custodian" class="block text-sm font-medium text-on-surface mb-1.5">Assigned Custodian</label>
+                <input id="assigned_custodian" type="text" name="assigned_custodian" value="{{ old('assigned_custodian', $asset->assigned_custodian) }}" class="w-full h-11 px-4 bg-surface-low/70 border border-outline-variant/30 focus:border-brand-500 focus:ring-2 focus:ring-brand-200/50 rounded-xl text-sm text-on-surface outline-none transition-all" placeholder="e.g. Jane Doe">
+                @error('assigned_custodian') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+            </div>
+
+            <div>
+                <label for="serial" class="block text-sm font-medium text-on-surface mb-1.5">Serial Number</label>
+                <input id="serial" type="text" name="serial" value="{{ old('serial', $asset->serial) }}" class="w-full h-11 px-4 bg-surface-low/70 border border-outline-variant/30 focus:border-brand-500 focus:ring-2 focus:ring-brand-200/50 rounded-xl text-sm text-on-surface outline-none transition-all" placeholder="e.g. SN-001">
+                @error('serial') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div>

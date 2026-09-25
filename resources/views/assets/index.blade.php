@@ -60,7 +60,7 @@
                     <div class="flex-1 min-w-0 grid sm:grid-cols-4 gap-2 sm:gap-4 items-center">
                         <div class="sm:col-span-1">
                             <a href="{{ route('assets.show', $asset) }}" class="block text-sm font-semibold text-on-surface hover:text-brand-700 truncate transition-colors">{{ $asset->name }}</a>
-                            <span class="text-xs text-on-surface-variant font-mono">{{ $asset->asset_tag }}</span>
+                            <span class="text-xs text-on-surface-variant font-mono">{{ $asset->asset_code ?? '' }}</span>
                         </div>
                         <span class="text-sm text-on-surface-variant hidden sm:block">{{ $asset->category?->name ?? '-' }}</span>
                         <span class="text-sm text-on-surface-variant hidden sm:block">{{ $asset->location ?? '-' }}</span>

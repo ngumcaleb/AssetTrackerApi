@@ -228,6 +228,7 @@ class AssetService
             return Asset::with(['category', 'creator', 'currentCheckout'])
                 ->where(function ($q) use ($token) {
                     $q->where('asset_tag', $token)
+                        ->orWhere('asset_code', $token)
                         ->orWhere('serial', $token);
                 })
                 ->first();
@@ -241,12 +242,14 @@ class AssetService
             }
         }
 
-        // Exact asset tag / serial (case-insensitive for tags)
+        // Exact asset tag / asset code / serial (case-insensitive)
         return Asset::with(['category', 'creator', 'currentCheckout'])
             ->where(function ($q) use ($raw) {
                 $q->whereRaw('LOWER(asset_tag) = ?', [mb_strtolower($raw)])
+                    ->orWhereRaw('LOWER(asset_code) = ?', [mb_strtolower($raw)])
                     ->orWhereRaw('LOWER(serial) = ?', [mb_strtolower($raw)])
                     ->orWhere('asset_tag', $raw)
+                    ->orWhere('asset_code', $raw)
                     ->orWhere('serial', $raw);
             })
             ->first();

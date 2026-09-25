@@ -41,6 +41,8 @@ class AssetController extends Controller
             $search = $request->string('search')->toString();
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('asset_code', 'like', "%{$search}%")
+                    ->orWhere('assigned_custodian', 'like', "%{$search}%")
                     ->orWhere('asset_tag', 'like', "%{$search}%")
                     ->orWhere('serial', 'like', "%{$search}%")
                     ->orWhere('brand', 'like', "%{$search}%")

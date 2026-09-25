@@ -19,7 +19,7 @@
             <div class="flex items-center justify-between mb-6">
                 <div>
                     <h1 class="text-2xl font-extrabold text-on-surface tracking-tight">{{ $asset->name }}</h1>
-                    <p class="text-sm text-on-surface-variant mt-0.5 font-mono">{{ $asset->asset_tag }}@if($asset->serial) · {{ $asset->serial }}@endif</p>
+                    <p class="text-sm text-on-surface-variant mt-0.5 font-mono">@if($asset->asset_code){{ $asset->asset_code }}@endif@if($asset->serial) · {{ $asset->serial }}@endif</p>
                 </div>
                 <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg @if($asset->status === 'active') text-emerald-700 bg-emerald-50 @elseif($asset->status === 'checked_out') text-amber-700 bg-amber-50 @elseif($asset->status === 'discarded') text-red-700 bg-red-50 @else text-stone-600 bg-stone-50 @endif capitalize">
                     <span class="w-1.5 h-1.5 rounded-full @if($asset->status === 'active') bg-emerald-500 @elseif($asset->status === 'checked_out') bg-amber-500 @elseif($asset->status === 'discarded') bg-red-500 @else bg-stone-400 @endif"></span>
@@ -30,6 +30,8 @@
             <div class="grid sm:grid-cols-2 gap-4">
                 @php
                     $fields = [
+                        ['label' => 'Asset Code', 'value' => $asset->asset_code ?? '-'],
+                        ['label' => 'Assigned Custodian', 'value' => $asset->assigned_custodian ?? '-'],
                         ['label' => 'Category', 'value' => $asset->category?->name ?? '-'],
                         ['label' => 'Brand', 'value' => $asset->brand ?? '-'],
                         ['label' => 'Model', 'value' => $asset->model ?? '-'],

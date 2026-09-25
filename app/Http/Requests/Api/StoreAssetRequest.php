@@ -16,7 +16,8 @@ class StoreAssetRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'serial' => ['required', 'string', 'max:255', 'unique:assets,serial'],
+            'asset_code' => ['nullable', 'string', 'max:255', 'unique:assets,asset_code'],
+            'serial' => ['nullable', 'string', 'max:255', 'unique:assets,serial'],
             'category_id' => ['required', 'exists:categories,id'],
             'brand' => ['nullable', 'string', 'max:255'],
             'model' => ['nullable', 'string', 'max:255'],
@@ -24,6 +25,7 @@ class StoreAssetRequest extends FormRequest
             'purchase_price' => ['nullable', 'numeric', 'min:0'],
             'supplier' => ['nullable', 'string', 'max:255'],
             'location' => ['nullable', 'string', 'max:255'],
+            'assigned_custodian' => ['nullable', 'string', 'max:255'],
             'condition' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'photo' => ['nullable', 'image', 'max:5120'],

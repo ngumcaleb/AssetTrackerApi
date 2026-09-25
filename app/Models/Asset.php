@@ -15,6 +15,7 @@ class Asset extends Model
     protected $fillable = [
         'name',
         'asset_tag',
+        'asset_code',
         'serial',
         'category_id',
         'status',
@@ -25,6 +26,7 @@ class Asset extends Model
         'purchase_price',
         'supplier',
         'location',
+        'assigned_custodian',
         'description',
         'archived_at',
         'archived_reason',

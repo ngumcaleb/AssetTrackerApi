@@ -25,16 +25,26 @@
                 @error('name') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
             </div>
 
+            <input type="hidden" name="asset_tag" value="{{ old('asset_tag', $nextTag) }}">
+
             <div>
-                <label for="asset_tag" class="block text-sm font-medium text-on-surface mb-1.5">Asset Tag *</label>
-                <input id="asset_tag" type="text" name="asset_tag" value="{{ old('asset_tag', $nextTag) }}" required
+                <label for="asset_code" class="block text-sm font-medium text-on-surface mb-1.5">Asset Code</label>
+                <input id="asset_code" type="text" name="asset_code" value="{{ old('asset_code') }}"
                     class="w-full h-11 px-4 bg-surface-low/70 border border-outline-variant/30 focus:border-brand-500 focus:ring-2 focus:ring-brand-200/50 rounded-xl text-sm text-on-surface placeholder-on-surface-variant/50 outline-none transition-all"
-                    placeholder="e.g. RW-001">
-                @error('asset_tag') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                    placeholder="e.g. AST-001 or LAP-042">
+                @error('asset_code') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div>
-                <label for="serial" class="block text-sm font-medium text-on-surface mb-1.5">Serial Number *</label>
+                <label for="assigned_custodian" class="block text-sm font-medium text-on-surface mb-1.5">Assigned Custodian</label>
+                <input id="assigned_custodian" type="text" name="assigned_custodian" value="{{ old('assigned_custodian') }}"
+                    class="w-full h-11 px-4 bg-surface-low/70 border border-outline-variant/30 focus:border-brand-500 focus:ring-2 focus:ring-brand-200/50 rounded-xl text-sm text-on-surface placeholder-on-surface-variant/50 outline-none transition-all"
+                    placeholder="e.g. Jane Doe (Finance Dept)">
+                @error('assigned_custodian') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+            </div>
+
+            <div>
+                <label for="serial" class="block text-sm font-medium text-on-surface mb-1.5">Serial Number</label>
                 <input id="serial" type="text" name="serial" value="{{ old('serial') }}"
                     class="w-full h-11 px-4 bg-surface-low/70 border border-outline-variant/30 focus:border-brand-500 focus:ring-2 focus:ring-brand-200/50 rounded-xl text-sm text-on-surface placeholder-on-surface-variant/50 outline-none transition-all"
                     placeholder="e.g. SN-001">

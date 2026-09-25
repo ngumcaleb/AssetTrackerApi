@@ -23,6 +23,8 @@ class AssetController extends Controller
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('name', 'like', "%{$request->search}%")
+                  ->orWhere('asset_code', 'like', "%{$request->search}%")
+                  ->orWhere('assigned_custodian', 'like', "%{$request->search}%")
                   ->orWhere('asset_tag', 'like', "%{$request->search}%")
                   ->orWhere('serial', 'like', "%{$request->search}%");
             });
@@ -59,8 +61,9 @@ class AssetController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'asset_tag' => ['required', 'string', 'unique:assets'],
-            'serial' => ['required', 'string', 'unique:assets'],
+            'asset_tag' => ['nullable', 'string', 'unique:assets'],
+            'asset_code' => ['nullable', 'string', 'max:255', 'unique:assets,asset_code'],
+            'serial' => ['nullable', 'string', 'max:255', 'unique:assets,serial'],
             'category_id' => ['required', 'exists:categories,id'],
             'brand' => ['nullable', 'string', 'max:255'],
             'model' => ['nullable', 'string', 'max:255'],
@@ -68,10 +71,15 @@ class AssetController extends Controller
             'purchase_price' => ['nullable', 'numeric'],
             'supplier' => ['nullable', 'string', 'max:255'],
             'location' => ['nullable', 'string', 'max:255'],
+            'assigned_custodian' => ['nullable', 'string', 'max:255'],
             'condition' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'photo' => ['nullable', 'image', 'max:5120'],
         ]);
+
+        if (empty($validated['asset_tag'])) {
+            $validated['asset_tag'] = 'AST-' . now()->year . '-' . str_pad((Asset::max('id') ?? 0) + 1, 4, '0', STR_PAD_LEFT);
+        }
 
         $validated['status'] = 'active';
         $validated['created_by'] = Auth::id();
@@ -103,8 +111,9 @@ class AssetController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'asset_tag' => ['required', 'string', 'unique:assets,asset_tag,' . $asset->id],
-            'serial' => ['required', 'string', 'unique:assets,serial,' . $asset->id],
+            'asset_tag' => ['sometimes', 'string', 'unique:assets,asset_tag,' . $asset->id],
+            'asset_code' => ['nullable', 'string', 'max:255', 'unique:assets,asset_code,' . $asset->id],
+            'serial' => ['nullable', 'string', 'max:255', 'unique:assets,serial,' . $asset->id],
             'category_id' => ['required', 'exists:categories,id'],
             'brand' => ['nullable', 'string', 'max:255'],
             'model' => ['nullable', 'string', 'max:255'],
@@ -112,6 +121,7 @@ class AssetController extends Controller
             'purchase_price' => ['nullable', 'numeric'],
             'supplier' => ['nullable', 'string', 'max:255'],
             'location' => ['nullable', 'string', 'max:255'],
+            'assigned_custodian' => ['nullable', 'string', 'max:255'],
             'condition' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'photo' => ['nullable', 'image', 'max:5120'],

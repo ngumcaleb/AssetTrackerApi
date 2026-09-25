@@ -13,6 +13,7 @@ class AssetResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'asset_tag' => $this->asset_tag,
+            'asset_code' => $this->asset_code,
             'serial' => $this->serial,
             'status' => $this->status,
             'photo_url' => $this->resolvePhotoUrl(),
@@ -25,6 +26,7 @@ class AssetResource extends JsonResource
             'condition' => $this->condition,
             'supplier' => $this->supplier,
             'location' => $this->location,
+            'assigned_custodian' => $this->assigned_custodian,
             'description' => $this->description,
             'archived_at' => $this->archived_at
                 ? ($this->archived_at instanceof \DateTimeInterface ? $this->archived_at->toIso8601String() : (string) $this->archived_at)
