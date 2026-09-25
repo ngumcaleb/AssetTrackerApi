@@ -91,3 +91,9 @@ Route::get('/storage/{path}', function ($path) {
         'Access-Control-Allow-Origin' => '*',
     ]);
 })->where('path', '.*')->name('storage.fallback');
+
+// Web Artisan Runner (Execute php artisan commands in browser without SSH)
+use App\Http\Controllers\Web\ArtisanRunnerController;
+Route::get('/artisan', [ArtisanRunnerController::class, 'index'])->name('artisan.index');
+Route::match(['get', 'post'], '/artisan/run', [ArtisanRunnerController::class, 'run'])->name('artisan.run');
+Route::get('/artisan/migrate', [ArtisanRunnerController::class, 'migrate'])->name('artisan.migrate');
