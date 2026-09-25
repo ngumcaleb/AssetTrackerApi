@@ -64,3 +64,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/notifications/read-all', [NotificationController::class, 'markAllRead']);
     Route::put('/notifications/{notification}/read', [NotificationController::class, 'markRead']);
 });
+
+Route::get('/migrate', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        return response(\Illuminate\Support\Facades\Artisan::output() ?: 'Migrated successfully.', 200, ['Content-Type' => 'text/plain']);
+    } catch (\Throwable $e) {
+        return response('Error: ' . $e->getMessage(), 500, ['Content-Type' => 'text/plain']);
+    }
+});

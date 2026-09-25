@@ -92,6 +92,23 @@ Route::get('/storage/{path}', function ($path) {
     ]);
 })->where('path', '.*')->name('storage.fallback');
 
+// Direct Migration Route
+use Illuminate\Support\Facades\Artisan;
+
+Route::get('/migrate', function () {
+    try {
+        Artisan::call('migrate', ['--force' => true]);
+        $output = Artisan::output();
+        return '<pre style="font-family:monospace;background:#0f172a;color:#10b981;padding:24px;border-radius:12px;font-size:14px;line-height:1.6;">' . htmlspecialchars($output ?: 'Migrations executed successfully (nothing to migrate or all up to date).') . '</pre>';
+    } catch (\Throwable $e) {
+        return '<pre style="font-family:monospace;background:#450a0a;color:#f87171;padding:24px;border-radius:12px;font-size:14px;">Error: ' . htmlspecialchars($e->getMessage()) . '</pre>';
+    }
+});
+
+Route::get('/run-migration', function () {
+    return redirect('/migrate');
+});
+
 // Web Artisan Runner (Execute php artisan commands in browser without SSH)
 use App\Http\Controllers\Web\ArtisanRunnerController;
 Route::get('/artisan', [ArtisanRunnerController::class, 'index'])->name('artisan.index');
